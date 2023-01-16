@@ -1,4 +1,4 @@
-![cloudcover-part-of-sttc-color-dark-logo.png](.img/cloudcover-part-of-sttc-color-dark-logo.png) & ![cloudcustodian-logo.png](.img/cloudcustodian-logo.png)
+![cloudcover-part-of-sttc-color-dark-logo.png](.img/cloudcover-part-of-sttc-color-dark-logo.png) & <img src=".img/cloudcustodian-logo.png" alt="c7n" width="200"/>
 
 ---
 
