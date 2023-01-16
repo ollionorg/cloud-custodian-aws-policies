@@ -1,0 +1,69 @@
+policies:
+  - name: cmk-use-external-key-material
+    description: "Account {account_id} - Ensure CMK KMS uses external key material"
+    resource: kms-key
+    filters:
+      - and:
+        - type: value
+          key: KeyManager
+          value: CUSTOMER
+          op: equal
+        - type: value
+          key: Origin
+          value: EXTERNAL
+          op: not-equal
+        - type: value
+          key: Enabled
+          value: true
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `CMK Key Origin`,
+                    "value": resource.Origin,
+                    "short": `true`
+                  },
+                  {
+                    "title": `CMK Key Alias Name`,
+                    "value": resource.AliasNames[0],
+                    "short": `true`
+                  },
+                  {
+                    "title": `CMK Key Status`,
+                    "value": resource.KeyState,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link to Key`,
+                    "value": join('', [`https://console.aws.amazon.com/kms/home?region=`, region, `#/kms/keys/`, resource.KeyId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

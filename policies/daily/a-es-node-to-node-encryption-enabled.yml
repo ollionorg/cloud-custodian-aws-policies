@@ -1,0 +1,59 @@
+policies:
+  - name: es-node-to-node-encryption-enabled
+    description: "Account {account_id} - Ensure node-to-node encryption feature is enabled for AWS Elasticsearch Service domains"
+    resource: elasticsearch
+    filters:
+      - and:
+        - type: value
+          key: NodeToNodeEncryptionOptions.Enabled
+          value: false
+        - type: value
+          key: Deleted
+          value: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `ES Domain Name`,
+                    "value": resource.DomainName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Node to Node Encryption Status`,
+                    "value": to_string(resource.NodeToNodeEncryptionOptions.Enabled),
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('',[`https://console.aws.amazon.com/es/home?region=`,region,`#domain:resource=`,resource.DomainName,`;action=dashboard;tab=undefined`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

@@ -1,0 +1,54 @@
+policies:
+- name: flow-logs-are-enabled-in-all-region
+  description: "Account {account_id} - Ensure VPC flow logging is enabled in all VPCs"
+  resource: vpc
+  filters:
+    - type: flow-logs
+      enabled: false
+  actions:
+    - type: webhook
+      url: REPLACE_WEBHOOK_HERE
+      body: |-
+        {
+          "attachments": [
+            {
+              "fallback": `CloudCustodian Policy Violation`,
+              "title": policy.description,
+              "color": `warning`,
+              "fields": [
+                {
+                  "title": `Priority`,
+                  "value": `Medium`,
+                  "short": `true`
+                },
+                {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                },
+                {
+                  "title": `AutoTag_Creator`,
+                  "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0],
+                  "short": `true`
+                },
+                {
+                  "title": `VPC ID`,
+                  "value": resource.VpcId,
+                  "short": `true`
+                },
+                {
+                  "title": `VPC Name`,
+                  "value": resource.Tags[?Key==`Name`].Value | [0],
+                  "short": `true`
+                },
+                {
+                    "title": `Link`,
+                    "value": join('', [`https://console.aws.amazon.com/vpc/home?region=`, region, `#VpcDetails:VpcId=`, resource.VpcId]),
+                    "short": `false`
+                }
+              ],
+              "footer": `Powered By CldCvr DevSecOps`,
+              "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+            }
+          ]
+        }

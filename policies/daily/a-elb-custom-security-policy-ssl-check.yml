@@ -1,0 +1,53 @@
+policies:
+  - name: elb-custom-security-policy-ssl-check
+    resource: elb
+    description: Account {account_id} - Ensure Classic LB SSL listeners are using custom policy
+    filters:
+      - type: ssl-policy
+        blacklist:
+            - "Protocol-SSLv2"
+            - "Protocol-SSLv3"
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `LB Name `,
+                    "value": resource.LoadBalancerName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0],
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/ec2/v2/home?region=`, region, `#/#Addresses:search=`, resource.LoadBalancerName]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
+
+# SOC2

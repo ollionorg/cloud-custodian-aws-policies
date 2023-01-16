@@ -1,0 +1,48 @@
+policies:
+  - name: aws-config-is-enabled-in-all-regions
+    resource: account
+    description: Account {account_id} - Ensure AWS Config is enabled in all regions
+    filters:
+      - not:
+        - type: check-config
+          all-resources: true
+          global-resources: true
+          running: true
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/config/home?region=`, region, `#/dashboard]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

@@ -1,0 +1,56 @@
+
+policies:
+  - name: unrestricted-ssh
+    resource: aws.security-group
+    description: Account {account_id} - Ensure security group ingress doesn't allow 0.0.0.0/0 to port 22
+    filters:
+    - type: ingress
+      Ports: [22]
+      Cidr:
+        value: 0.0.0.0/0
+        op: eq
+        value_type: cidr
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Security Group Name`,
+                    "value": resource.GroupId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0],
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/ec2/v2/home?region=`, region, `#SecurityGroup:groupId=`, resource.GroupId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
+
+# SOC2

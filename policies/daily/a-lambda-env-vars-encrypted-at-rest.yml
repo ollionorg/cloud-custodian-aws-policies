@@ -1,0 +1,45 @@
+policies:
+- name: aws-lambda-env-vars-encrypted-at-rest
+  description: "Account {account_id} - Ensure AWS Lambda env vars encrypted at rest"
+  resource: aws.lambda
+  filters:
+    - or:
+      - type: value
+        key: KMSKeyArn
+        value: absent
+      - type: value
+        key: KMSKeyArn
+        op: regex
+        value: '^((?!arn:aws:kms).)*$'
+  actions:
+    - type: webhook
+      url: REPLACE_WEBHOOK_HERE
+      body: |-
+        {
+          "attachments": [
+            {
+              "fallback": `CloudCustodian Policy Violation`,
+              "title": policy.description,
+              "color": `danger`,
+              "fields": [
+                {
+                  "title": `Priority`,
+                  "value": `High`,
+                  "short": `true`
+                },
+                {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                },
+                {
+                    "title": `Link`,
+                    "value": join('', [`https://console.aws.amazon.com/lambda/home?region=`, region, `#/functions/`, resource.FunctionName]),
+                    "short": `false`
+                }
+              ],
+              "footer": `Powered By CldCvr DevSecOps`,
+              "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+            }
+          ]
+        }

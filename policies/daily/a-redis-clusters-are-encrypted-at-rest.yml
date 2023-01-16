@@ -1,0 +1,52 @@
+policies:
+  - name: redis-clusters-are-encrypted-at-rest
+    description: |
+      Account {account_id} - Ensure that AWS ElastiCache Redis clusters are Data At-Rest encrypted
+    resource: elasticache-group
+    filters:
+      - type: value
+        key: AtRestEncryptionEnabled
+        value: true
+        op: not-equal
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+             "attachments": [
+               {
+                 "fallback": `CloudCustodian Policy Violation`,
+                 "title": policy.description,
+                 "color": `danger`,
+                 "fields": [
+                   {
+                     "title": `Priority`,
+                     "value": `High`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Redis Id`,
+                     "value": resource.ReplicationGroupId,
+                     "short": `true`
+                   },
+                   {
+                     "title": `At Rest Encryption Enabled`,
+                     "value": `False`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Account ID`,
+                     "value": account_id,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Region`,
+                     "value": region,
+                     "short": `true`
+                   }
+                 ],
+                 "footer": `Powered By CldCvr DevSecOps`,
+                 "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+               }
+             ]
+          }

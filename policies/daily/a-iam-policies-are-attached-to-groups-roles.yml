@@ -1,0 +1,52 @@
+policies:
+  - name: iam-policies-attached-to-groups-roles
+    description: "Account {account_id} - Ensure IAM policies are attached only to groups or roles"
+    resource: aws.iam-user
+    filters:
+      - or:
+        - type: has-inline-policy
+        - type: policy
+          key: PolicyName
+          value: present
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `warning`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Medium`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `IAM User having policies attached`,
+                    "value": resource.UserName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

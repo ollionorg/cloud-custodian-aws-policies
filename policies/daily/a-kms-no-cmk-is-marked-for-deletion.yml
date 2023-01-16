@@ -1,0 +1,64 @@
+policies:
+  - name: no-cmk-is-marked-for-deletion
+    description: "Account {account_id} - Ensure CMK KMS is not marked for deletion"
+    resource: kms-key
+    filters:
+      - and:
+        - type: value
+          key: KeyManager
+          value: CUSTOMER
+        - type: value
+          key: KeyState
+          value: PendingDeletion
+        - type: value
+          key: DeletionDate
+          value_type: expiration
+          value: 30
+          op: less-than
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `CMK Key Alias Name`,
+                    "value": resource.AliasNames[0],
+                    "short": `true`
+                  },
+                  {
+                    "title": `CMK Key Status`,
+                    "value": resource.KeyState,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link to Key`,
+                    "value": join('', [`https://console.aws.amazon.com/kms/home?region=`, region, `#/kms/keys/`, resource.KeyId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

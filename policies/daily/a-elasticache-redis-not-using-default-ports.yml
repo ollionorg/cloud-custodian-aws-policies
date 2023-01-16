@@ -1,0 +1,70 @@
+policies:
+  - name: elasticache-redis-not-using-default-ports
+    description: |
+      Account {account_id} - Ensure that AWS ElastiCache redis clusters are not using 6379 port
+    resource: elasticache-group
+    filters:
+      - and:
+        - type: value
+          key: ReplicationGroupId
+          value: divvycloud-redis
+          op: not-equal
+        - or:
+          - type: value
+            key: NodeGroups[].PrimaryEndpoint.Port|[0]
+            value: 6379
+            op: equal
+          - type: value
+            key: NodeGroups[].ReaderEndpoint.Port|[0]
+            value: 6379
+            op: equal
+          - type: value
+            key: NodeGroups[].NodeGroupMembers[].ReadEndpoint.Port|[0]
+            value: 6379
+            op: equal
+          - type: value
+            key: NodeGroups[].PrimaryEndpoint.Port|[0]
+            value: 6379
+            op: equal
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `warning`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Low`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Redis Id`,
+                    "value": resource.ReplicationGroupId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Port in use`,
+                    "value": `6379`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

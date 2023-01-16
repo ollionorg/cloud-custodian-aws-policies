@@ -1,0 +1,61 @@
+policies:
+  - name: redis-has-multi-az-failover-enabled
+    description: |
+      Account {account_id} - Ensure AWS ElastiCache Redis cluster with Multi-AZ Automatic Failover feature is set to enabled
+    resource: elasticache-group
+    filters:
+      - not:
+        - and:
+            - type: value
+              key: AutomaticFailover
+              value: enabled
+            - type: value
+              key: MultiAZ
+              value: enabled
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+             "attachments": [
+               {
+                 "fallback": `CloudCustodian Policy Violation`,
+                 "title": policy.description,
+                 "color": `warning`,
+                 "fields": [
+                   {
+                     "title": `Priority`,
+                     "value": `Low`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Redis Id`,
+                     "value": resource.ReplicationGroupId,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Multi AZ Status`,
+                     "value": resource.MultiAZ,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Automatic Failover Status`,
+                     "value": resource.AutomaticFailover,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Account ID`,
+                     "value": account_id,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Region`,
+                     "value": region,
+                     "short": `true`
+                   }
+                 ],
+                 "footer": `Powered By CldCvr DevSecOps`,
+                 "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+               }
+             ]
+          }

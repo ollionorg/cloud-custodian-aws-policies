@@ -1,0 +1,57 @@
+policies:
+  - name: aws-iam-ssl-tls-expired-certs-alert
+    resource: iam-certificate
+    description: Account {account_id} - SSL/TLS Certificate that are already expired
+    filters:
+      - type: value
+        key: Expiration
+        value_type: expiration
+        op: less-than
+        value: 0
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `IAM Certificate ID`,
+                    "value": resource.ServerCertificateId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Certificate Name`,
+                    "value": resource.ServerCertificateName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Certificate ARN`,
+                    "value": resource.Arn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
