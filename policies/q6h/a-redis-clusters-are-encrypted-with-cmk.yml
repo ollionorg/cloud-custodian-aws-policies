@@ -1,0 +1,63 @@
+policies:
+  - name: a-redis-clusters-are-encrypted-with-cmk
+    description: |
+      Account {account_id} - Ensure that AWS ElastiCache Redis clusters are Data At-Rest encrypted with CMK
+    resource: elasticache-group
+    filters:
+      - and:
+        - AtRestEncryptionEnabled: true
+        - or:
+          - type: kms-key
+            key: c7n:AliasName
+            value: '(^aws\/)\w+'
+            op: regex
+          - type: value
+            key: KmsKeyId
+            value: absent
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+             "attachments": [
+               {
+                 "fallback": `CloudCustodian Policy Violation`,
+                 "title": policy.description,
+                 "color": `danger`,
+                 "fields": [
+                   {
+                     "title": `Priority`,
+                     "value": `High`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Redis Id`,
+                     "value": resource.ReplicationGroupId,
+                     "short": `true`
+                   },
+                   {
+                     "title": `At Rest Encryption Enabled`,
+                     "value": `True`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `CMK Usage`,
+                     "value": `False`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Account ID`,
+                     "value": account_id,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Region`,
+                     "value": region,
+                     "short": `true`
+                   }
+                 ],
+                 "footer": `Powered By CldCvr DevSecOps`,
+                 "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+               }
+             ]
+          }

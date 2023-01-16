@@ -1,0 +1,53 @@
+policies:
+  - name: a-s3-deny-bucket-policy-access-to-all
+    description: "Account {account_id} - S3 Bucket Policy deny Access to Everyone"
+    resource: s3
+    filters:
+      - type: cross-account
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Name`,
+                    "value": resource.Name,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Owner`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('', [`https://s3.console.aws.amazon.com/s3/buckets/`, resource.Name, `?region=`, region, `&tab=permissions`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

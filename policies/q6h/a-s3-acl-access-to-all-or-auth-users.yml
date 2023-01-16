@@ -1,0 +1,58 @@
+policies:
+  - name: a-s3-acl-access-to-all-or-auth-users
+    description: "Account {account_id} - S3 Bucket Access Control List Grant Access to Everyone or Authenticated Users"
+    resource: s3
+    filters:
+      - type: global-grants
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Name`,
+                    "value": resource.Name,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Owner`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Remediation `,
+                    "value": `Public Access Removed`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('', [`https://s3.console.aws.amazon.com/s3/buckets/`, resource.Name, `?region=`, region, `&tab=permissions`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

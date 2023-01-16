@@ -1,0 +1,49 @@
+policies:
+  - name: a-redis-clusters-are-auth-enabled
+    description: |
+      Account {account_id} - Ensure AWS ElastiCache Redis cluster with Redis AUTH feature is enabled
+    resource: elasticache-group
+    filters:
+      - AuthTokenEnabled: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+             "attachments": [
+               {
+                 "fallback": `CloudCustodian Policy Violation`,
+                 "title": policy.description,
+                 "color": `warning`,
+                 "fields": [
+                   {
+                     "title": `Priority`,
+                     "value": `Medium`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Redis Id`,
+                     "value": resource.ReplicationGroupId,
+                     "short": `true`
+                   },
+                   {
+                     "title": `AUTH Enabled`,
+                     "value": `False`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Account ID`,
+                     "value": account_id,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Region`,
+                     "value": region,
+                     "short": `true`
+                   }
+                 ],
+                 "footer": `Powered By CldCvr DevSecOps`,
+                 "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+               }
+             ]
+          }

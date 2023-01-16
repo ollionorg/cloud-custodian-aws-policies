@@ -1,0 +1,66 @@
+policies:
+  - name: a-firehose-delivery-stream-encryption-config-has-cmk
+    description: |
+      Account {account_id} - Ensure AWS Kinesis Data Firehose delivery stream with Direct PUT and other sources as source has Server-side encryption configured with KMS Customer Managed Keys
+    resource: firehose
+    filters:
+      - and:
+        - type: value
+          key: DeliveryStreamEncryptionConfiguration.Status
+          value: ENABLED
+          op: equal
+        - type: value
+          key: DeliveryStreamType
+          value: DirectPut
+          op: equal
+        - type: value
+          key: DeliveryStreamEncryptionConfiguration.KeyType
+          value: CUSTOMER_MANAGED_CMK
+          op: not-equal
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+             "attachments": [
+               {
+                 "fallback": `CloudCustodian Policy Violation`,
+                 "title": policy.description,
+                 "color": `danger`,
+                 "fields": [
+                   {
+                     "title": `Priority`,
+                     "value": `High`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Kinesis Delivery Stream Name`,
+                     "value": resource.DeliveryStreamName,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Delivery Stream Encryption Key Type`,
+                     "value": resource.DeliveryStreamEncryptionConfiguration.KeyType,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Account ID`,
+                     "value": account_id,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Region`,
+                     "value": region,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Link`,
+                     "value": join('',[`https://console.aws.amazon.com/firehose/home?region=`, region, `#/details/`, resource.DeliveryStreamName]),
+                     "short": `false`
+                   }
+                 ],
+                 "footer": `Powered By CldCvr DevSecOps`,
+                 "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+               }
+             ]
+          }
