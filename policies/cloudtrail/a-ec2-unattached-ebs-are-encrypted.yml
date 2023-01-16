@@ -1,0 +1,65 @@
+policies:
+  - name: a-ec2-unattached-ebs-are-encrypted
+    description: "Account {account_id} - Ensure unattached EBS volumes are encrypted"
+    resource: ebs
+    mode:
+        type: cloudtrail
+        role: "arn:aws:iam::{account_id}:role/custodian-role"
+        events:
+         - CreateVolume
+    filters:
+      - and:
+        - State: available
+        - Encrypted: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Volume Id`,
+                    "value": resource.VolumeId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Volume Name`,
+                    "value": resource.Tags[?Key==`Name`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `false`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Culprit`,
+                    "value": event.detail.userIdentity.arn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

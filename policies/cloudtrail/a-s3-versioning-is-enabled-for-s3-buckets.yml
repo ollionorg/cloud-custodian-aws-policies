@@ -1,0 +1,69 @@
+policies:
+  - name: a-s3-versioning-is-enabled-for-s3-buckets
+    description: "Account {account_id} - Ensure versioning is enabled for S3 buckets"
+    resource: s3
+    mode:
+      role: "arn:aws:iam::{account_id}:role/custodian-role"
+      type: cloudtrail
+      events:
+        - source: s3.amazonaws.com
+          event: PutBucketVersioning
+          ids: 'detail.requestParameters.bucketName'
+        - source: s3.amazonaws.com
+          event: CreateBucket
+          ids: 'detail.requestParameters.bucketName'
+    filters:
+      - or:
+        - type: value
+          key: Versioning.Status
+          value: Suspended
+        - type: value
+          key: Versioning.Status
+          value: absent
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Name`,
+                    "value": resource.Name,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Culprit`,
+                    "value": event.detail.userIdentity.arn,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

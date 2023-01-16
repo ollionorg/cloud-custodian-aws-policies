@@ -1,0 +1,72 @@
+policies:
+  - name: a-rds-snapshot-shared-with-account
+    description: "Account {account_id} - Ensure RDS snapshot is not shared with any aws account"
+    resource: rds-snapshot
+    mode:
+      role: "arn:aws:iam::{account_id}:role/custodian-role"
+      type: cloudtrail
+      events:
+        - source: rds.amazonaws.com
+          event: ModifyDBSnapshotAttribute
+          ids: detail.requestParameters.dBSnapshotIdentifier
+    filters:
+      - type: cross-account
+        whitelist: 
+          - "all"
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `RDS Snapshot ID`,
+                    "value": resource.DBSnapshotIdentifier,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Accounts shared with`,
+                    "value": event.detail.requestParameters.valuesToAdd | join(`, `, [*]),
+                    "short": `true`
+                  },
+                  {
+                    "title": `Culprit`,
+                    "value": event.detail.userIdentity.arn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/rds/home?region=`, region, `#db-snapshot:id=`, resource.DBSnapshotIdentifier]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

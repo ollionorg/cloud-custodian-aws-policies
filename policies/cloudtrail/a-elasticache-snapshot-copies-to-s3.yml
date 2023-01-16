@@ -1,0 +1,68 @@
+policies:
+  - name: a-elasticache-snapshot-copies-to-s3
+    description: "Account {account_id} - Ensure Elasticache snapshot is not copied to S3 Bucket"
+    resource: cache-snapshot
+    mode:
+      role: "arn:aws:iam::{account_id}:role/custodian-role"
+      type: cloudtrail
+      events:
+        - source: elasticache.amazonaws.com
+          event: CopySnapshot
+          ids: detail.requestParameters.sourceSnapshotName
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `warning`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Medium`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Elasticache Snapshot Name`,
+                    "value": event.detail.requestParameters.sourceSnapshotName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Target Elasticache Snapshot Name`,
+                    "value": event.detail.requestParameters.targetSnapshotName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Culprit`,
+                    "value": event.detail.userIdentity.arn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Destination S3 Bucket`,
+                    "value": join('', [`https://s3.console.aws.amazon.com/s3/buckets/`,event.detail.requestParameters.targetBucket,`?region=`, region]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

@@ -1,0 +1,75 @@
+policies:
+  - name: a-rds-instance-access-to-public
+    description: "Account {account_id} - Ensure RDS instances are not publicly accessible"
+    resource: rds
+    mode:
+      role: "arn:aws:iam::{account_id}:role/custodian-role"
+      type: cloudtrail
+      events:
+        - source: rds.amazonaws.com
+          event: CreateDBInstance
+          ids: requestParameters.dBInstanceIdentifier
+        - source: rds.amazonaws.com
+          event: ModifyDBInstance
+          ids: requestParameters.dBInstanceIdentifier
+    filters:
+      - type: event
+        key: "detail.requestParameters.publiclyAccessible"
+        value: true
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `RDS Instance id`,
+                    "value": resource.DBInstanceIdentifier,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Event Name`,
+                    "value": event.detail.eventName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Culprit`,
+                    "value": event.detail.userIdentity.arn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/rds/home?region=`, region, `#database:id=`, resource.DBInstanceIdentifier, `;is-cluster=false`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
