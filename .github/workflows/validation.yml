@@ -1,0 +1,90 @@
+name: Custodian Policy Validation
+on:
+  pull_request:
+    paths:
+      - policies/**
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  filenameCheck:
+    name: check-filename-format
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: read
+      contents: read
+    steps:
+      - name: 'Cleanup build folder'
+        run: |
+          ls -la ./
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          ls -la ./
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: check filename
+        run: |
+          find policies -type f \( -iname "*.yaml" -o -iname "*.yml" \) ! \( -iname "[ar-]*.yaml" -o -iname "[ar-]*.yml" \) | while read POLICY; do
+            echo "$POLICY filename is not in correct format. Prefix the file with 'r-' for remediation or 'a-' for alerting only." && exit 1
+          done
+
+  checkLength:
+    needs:
+      - filenameCheck
+    name: check-policy-length
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: 'Install yq'
+        run: |
+          sudo add-apt-repository ppa:rmescandon/yq
+          sudo apt update
+          sudo apt install yq -y
+
+      - name: check policies length
+        run: |
+          find policies -type f \( -iname "*.yml" -o -iname "*.yaml" \) | while read POLICY; do
+            IFS=" "; yq -r '.policies | to_entries | .[] | [.value.name | length, .value.name] | join(" ")' "$POLICY" | while read POLICY_LENGTH POLICY_NAME; do
+              if [ "$POLICY_LENGTH" -gt "54" ]; then
+                echo "$POLICY_NAME name too long. Please shorten to 54 characters or less."
+                exit 1
+              fi
+            done
+          done
+
+  custodianValidator:
+    needs:
+      - checkLength
+      - filenameCheck
+    name: validation-check
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install python3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install Custodian
+        run: |
+          pip install c7n
+
+      - name: Validate policies
+        run: |
+          find policies -type f \( -iname "*.yml" -o -iname "*.yaml" \) | while read POLICY; do
+            custodian validate "$POLICY" || exit 1
+          done
