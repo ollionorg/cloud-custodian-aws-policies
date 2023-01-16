@@ -1,0 +1,61 @@
+policies:
+  - name: a-elb-clb-is-not-using-unencrypted-protocol
+    description: "Account {account_id} - Classic ELB is using unencrypted protocol"
+    resource: elb
+    filters:
+      - type: value
+        key: ListenerDescriptions[0].Listener.Protocol
+        value: HTTPS
+        op: ne
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Loadbalancer Name`,
+                    "value": resource.LoadBalancerName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Loadbalancer Type`,
+                    "value": `Classic`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Remediation Status`,
+                    "value": `Remove unencrypted listeners (like HTTP)`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
