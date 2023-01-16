@@ -1,0 +1,75 @@
+policies:
+  - name: a-redshift-snapshot-shared-with-account
+    description: "Account {account_id} - Ensure Redshift Cluster Snapshot is not shared with another account"
+    resource: redshift-snapshot
+    mode:
+      role: "arn:aws:iam::{account_id}:role/custodian-role"
+      type: cloudtrail
+      events:
+        - source: redshift.amazonaws.com
+          event: AuthorizeSnapshotAccess
+          ids: detail.requestParameters.snapshotIdentifier
+    filters:
+      - type: cross-account
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Redshift Snapshot Name`,
+                    "value": resource.SnapshotIdentifier,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Source Redshift Cluster Name`,
+                    "value": resource.ClusterIdentifier,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Accounts shared with`,
+                    "value": event.detail.requestParameters.accountWithRestoreAccess,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Culprit`,
+                    "value": event.detail.userIdentity.arn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/redshiftv2/home?region=`,region,`#snapshot-details?snapshot=`, resource.SnapshotIdentifier]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

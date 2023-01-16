@@ -1,0 +1,69 @@
+policies:
+  - name: a-ec2-public-ebs-snapshot
+    description: Account {account_id} - Ensure EBS snapshot is not publicly accessible
+    resource: ebs-snapshot
+    mode:
+      role: "arn:aws:iam::{account_id}:role/custodian-role"
+      type: cloudtrail
+      events:
+        - source: ec2.amazonaws.com
+          event: ModifySnapshotAttribute
+          ids: "detail.requestParameters.snapshotId"  
+    filters:
+      - type: event
+        key: "detail.requestParameters.createVolumePermission.add.items[0].group"
+        value: all
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `EBS Snapshot ID`,
+                    "value": resource.SnapshotId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Culprit`,
+                    "value": event.detail.userIdentity.arn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0],
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('', [`https://console.aws.amazon.com/ec2/v2/home?region=`, region, `#Snapshots:search=`, resource.SnapshotId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
+
+# SOC2

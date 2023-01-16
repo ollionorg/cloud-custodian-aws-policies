@@ -1,0 +1,70 @@
+policies:
+  - name: a-s3-bucket-settings-for-public-is-set
+    description: "Account {account_id} - Ensure bucket settings are proper for public access"
+    resource: s3
+    mode:
+      type: cloudtrail
+      events:
+        - source: 's3.amazonaws.com'
+          event: PutBucketPublicAccessBlock
+          ids: "requestParameters.bucketName"
+      role: "arn:aws:iam::{account_id}:role/custodian-role"
+    filters:
+      - type: check-public-block
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Name`,
+                    "value": resource.Name,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Owner`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Public Block Enabled`,
+                    "value": `True`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Culprit`,
+                    "value": event.detail.userIdentity.arn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('', [`https://s3.console.aws.amazon.com/s3/buckets/`, resource.Name, `?region=`, region, `&tab=permissions`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
