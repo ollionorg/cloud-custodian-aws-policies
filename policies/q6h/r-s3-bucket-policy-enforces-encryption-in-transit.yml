@@ -1,0 +1,72 @@
+policies:
+  - name: r-s3-policy-enforces-encryption-in-transit
+    description: "Account {account_id} - Ensure that bucket policy enforces encryption in transit"
+    resource: s3
+    filters:
+      - type: missing-policy-statement
+        statement_ids:
+          - CustodianEncryptionInTransit
+    actions:
+      - type: set-statements
+        statements:
+          - Sid: "CustodianEncryptionInTransit"
+            Effect: "Deny"
+            Action: "s3:*"
+            Principal: "*"
+            Resource:
+              - "arn:aws:s3:::{bucket_name}/*"
+              - "arn:aws:s3:::{bucket_name}"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Name`,
+                    "value": resource.Name,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Owner`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Encryption in Transit`,
+                    "value": `Not Enabled`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('', [`https://s3.console.aws.amazon.com/s3/buckets/`, resource.Name, `?region=`, region, `&tab=permissions`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
