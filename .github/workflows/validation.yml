@@ -44,11 +44,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: 'Install yq'
-        run: |
-          sudo add-apt-repository ppa:rmescandon/yq
-          sudo apt update
-          sudo apt install yq -y
+      - name: install yq
+        uses: mikefarah/yq@v4.30.8
 
       - name: check policies length
         run: |
