@@ -13,7 +13,7 @@ jobs:
     name: check-filename-format
     runs-on: ubuntu-latest
     permissions:
-      id-token: read
+      id-token: write
       contents: read
     steps:
       - name: 'Cleanup build folder'
@@ -38,17 +38,14 @@ jobs:
     name: check-policy-length
     runs-on: ubuntu-latest
     permissions:
-      id-token: read
+      id-token: write
       contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: 'Install yq'
-        run: |
-          sudo add-apt-repository ppa:rmescandon/yq
-          sudo apt update
-          sudo apt install yq -y
+      - name: install yq
+        uses: mikefarah/yq@v4.30.8
 
       - name: check policies length
         run: |
@@ -68,7 +65,7 @@ jobs:
     name: validation-check
     runs-on: ubuntu-latest
     permissions:
-      id-token: read
+      id-token: write
       contents: read
     steps:
       - name: Checkout
