@@ -1,0 +1,45 @@
+policies:
+  - name: cloudtrail-integrated-cloudwatch-logs
+    resource: cloudtrail
+    description: Account {account_id} -  Ensure CloudTrail trails are integrated with CloudWatch Logs
+    filters:
+      - type: value
+        key: CloudWatchLogsLogGroupArn
+        value: empty
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Trail ARN`,
+                    "value": resource.TrailArn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

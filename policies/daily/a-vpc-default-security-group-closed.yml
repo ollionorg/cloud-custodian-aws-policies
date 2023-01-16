@@ -1,0 +1,59 @@
+policies:
+  - name: vpc-default-security-group-closed
+    resource: aws.security-group
+    description: Account {account_id} - Ensure default security group of any VPC does not allow inbound or outbound traffic
+    filters:
+      - type: value
+        key: "GroupName"
+        value: "default"
+      - or:
+        - type: value
+          key: IpPermissions
+          value: not-null
+        - type: value
+          key: IpPermissionsEgress
+          value: not-null
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Default Security Group ID`,
+                    "value": resource.GroupId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/ec2/v2/home?region=`, region, `#SecurityGroup:groupId=`, resource.GroupId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
+
+# SOC2

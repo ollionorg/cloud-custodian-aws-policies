@@ -1,0 +1,53 @@
+policies:
+  - name: internet-gateway-authorized-vpc-only
+    resource: internet-gateway
+    description: Account {account_id} - Ensure Internet Gateway has authorized VPC
+    filters:
+      - type: value
+        key: Attachments
+        value: empty
+        op: equal
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Internet Gateway ID`,
+                    "value": resource.InternetGatewayId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0],
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/vpc/home?region=`, region, `#InternetGateway:internetGatewayId=`, resource.InternetGatewayId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
+
+# SOC2

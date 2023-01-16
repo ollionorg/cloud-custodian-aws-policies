@@ -1,0 +1,91 @@
+policies:
+  - name: s3-public-rw-prohibited
+    description: Account {account_id} - Ensure S3 bucket prohibite public read or write access
+    resource: s3
+    filters:
+      - or:
+        - type: global-grants
+        - type: has-statement
+          statements:
+            - Effect: Allow
+              Action: 's3:GetObject'
+              Principal: '*'
+        - type: has-statement
+          statements:
+            - Effect: Allow
+              Action: 's3:PutObject'
+              Principal: '*'
+        - type: has-statement
+          statements:
+            - Effect: Allow
+              Action: 's3:*'
+              Principal: '*'
+        - type: has-statement
+          statements:
+            - Effect: Allow
+              Action: 's3:GetObject*'
+              Principal: '*'
+        - type: has-statement
+          statements:
+            - Effect: Allow
+              Action: 's3:PutObject*'
+              Principal: '*'            
+        - type: has-statement
+          statements:
+            - Effect: Allow
+              Action: 's3:Get*'
+              Principal: '*'
+        - type: has-statement
+          statements:
+            - Effect: Allow
+              Action: 's3:Put*'
+              Principal: '*'
+        - type: has-statement
+          statements:
+            - Effect: Allow
+              Action: 's3:*Object'
+              Principal: '*'
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Name`,
+                    "value": resource.Name,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Bucket Owner`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": resource.Location.LocationConstraint,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('', [`https://s3.console.aws.amazon.com/s3/buckets/`, resource.Name, `?region=`, resource.Location.LocationConstraint, `&tab=permissions`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
+
+# SOC2

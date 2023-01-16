@@ -1,0 +1,53 @@
+policies:
+  - name: efs-encryption-is-enabled-for-data-at-rest
+    description: "Account {account_id} - Ensure EFS Encryption is enabled for data at rest"
+    resource: efs
+    filters:
+      - Encrypted: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `warning`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Medium`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `EFS Name`,
+                    "value": resource.Name,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Encryption Status`,
+                    "value": to_string(resource.Encrypted),
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('',[`https://console.aws.amazon.com/efs/home?region=`,region,`#/file-systems/`,resource.FileSystemId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

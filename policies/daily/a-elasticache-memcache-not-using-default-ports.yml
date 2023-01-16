@@ -1,0 +1,53 @@
+policies:
+  - name: elasticache-memcache-not-using-default-ports
+    description: |
+      Account {account_id} - Ensure that AWS ElastiCache Memcached clusters are not using 11211 port
+    resource: cache-cluster
+    filters:
+      - or:
+        - type: value
+          key: ConfigurationEndpoint.Port
+          value: 11211
+          op: equal
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `warning`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Low`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Memcached Id`,
+                    "value": resource.CacheClusterId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Port in use`,
+                    "value": `11211`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

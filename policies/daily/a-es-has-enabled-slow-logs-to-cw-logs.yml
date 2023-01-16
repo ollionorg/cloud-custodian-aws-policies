@@ -1,0 +1,75 @@
+policies:
+  - name: es-has-enabled-slow-logs-to-cw-logs
+    description: |
+      Account {account_id} - Ensure AWS Elasticsearch Service domains have enabled the support for publishing slow logs to AWS CloudWatch Logs
+    resource: elasticsearch
+    filters:
+      - and:
+        - type: value
+          key: Deleted
+          value: false
+        - or:
+          - type: value
+            key: LogPublishingOptions
+            value: absent
+          - or:
+            - type: value
+              key: LogPublishingOptions.INDEX_SLOW_LOGS
+              value: absent
+            - type: value
+              key: LogPublishingOptions.INDEX_SLOW_LOGS.Enabled
+              value: false
+          - or:
+            - type: value
+              key: LogPublishingOptions.SEARCH_SLOW_LOGS
+              value: absent
+            - type: value
+              key: LogPublishingOptions.SEARCH_SLOW_LOGS.Enabled
+              value: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `warning`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Low`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `ES Domain Name`,
+                    "value": resource.DomainName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Logs Publishing Enabled`,
+                    "value": [resource.LogPublishingOptions.INDEX_SLOW_LOGS.Enabled && resource.LogPublishingOptions.SEARCH_SLOW_LOGS.Enabled]|[0] && `Logs are enabled` || `Slow Logs not enabled`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('',[`https://console.aws.amazon.com/es/home?region=`,region,`#domain:resource=`,resource.DomainName,`;action=dashboard;tab=TAB_LOGS_ID`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

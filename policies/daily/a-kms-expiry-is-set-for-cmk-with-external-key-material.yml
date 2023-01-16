@@ -1,0 +1,72 @@
+policies:
+  - name: cmk-expiry-set-with-ext-key-material
+    description: "Account {account_id} - Ensure that the key expiry is set for CMK with external key material"
+    resource: kms-key
+    filters:
+      - and:
+        - type: value
+          key: KeyManager
+          value: CUSTOMER
+          op: equal
+        - type: value
+          key: Origin
+          value: EXTERNAL
+          op: equal
+        - type: value
+          key: Enabled
+          value: true
+        - type: value
+          key: ExpirationModel
+          value: KEY_MATERIAL_DOES_NOT_EXPIRE
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `warning`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Medium`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `CMK Key Alias Name`,
+                    "value": resource.AliasNames[0],
+                    "short": `true`
+                  },
+                  {
+                    "title": `CMK Key Status`,
+                    "value": resource.KeyState,
+                    "short": `true`
+                  },
+                  {
+                    "title": `CMK Key Expiry`,
+                    "value": `Not Enabled`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link to Key`,
+                    "value": join('', [`https://console.aws.amazon.com/kms/home?region=`, region, `#/kms/keys/`, resource.KeyId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

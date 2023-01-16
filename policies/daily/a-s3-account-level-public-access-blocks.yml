@@ -1,0 +1,51 @@
+policies:
+  - name: s3-account-level-public-access-blocks
+    resource: aws.account
+    description: Account {account_id} - Ensure Account level S3 public access block is enabled
+    filters:
+      - type: s3-public-block
+        key: RestrictPublicBuckets
+        value: false
+      - type: s3-public-block
+        key: BlockPublicAcls
+        value: false
+      - type: s3-public-block
+        key: IgnorePublicAcls
+        value: false
+      - type: s3-public-block
+        key: BlockPublicPolicy
+        value: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Affected Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0],
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
+
+# SOC2

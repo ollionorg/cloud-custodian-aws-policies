@@ -1,0 +1,64 @@
+policies:
+  - name: es-node-to-node-encryption-enabled
+    description: "Account {account_id} - Ensure AWS Elasticsearch Service domains are using the latest version of Elasticsearch engine"
+    resource: elasticsearch
+    filters:
+      - and:
+        - type: value
+          key: ServiceSoftwareOptions.UpdateAvailable
+          value: false
+        - type: value
+          key: Deleted
+          value: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `warning`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Medium`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `ES Domain Name`,
+                    "value": resource.DomainName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Update Status`,
+                    "value": to_string(resource.ServiceSoftwareOptions.Description),
+                    "short": `true`
+                  },
+                  {
+                    "title": `New ES Engine Version`,
+                    "value": resource.ServiceSoftwareOptions.NewVersion || `Not Available`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('',[`https://console.aws.amazon.com/es/home?region=`,region,`#domain:resource=`,resource.DomainName,`;action=dashboard;tab=undefined`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

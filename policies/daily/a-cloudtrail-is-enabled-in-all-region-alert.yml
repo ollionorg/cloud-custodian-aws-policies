@@ -1,0 +1,50 @@
+policies:
+  - name: cloudtrail-is-enabled-all-region
+    resource: aws.cloudtrail
+    description: Account {account_id} - Ensure CloudTrail is enabled in all regions
+    filters:
+        - type: value 
+          key: IsMultiRegionTrail
+          value: false          
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Trail ARN`,
+                    "value": resource.TrailArn,
+                    "short": `true`
+                  },
+                  {
+                  "title": `Resource Link`,
+                  "value": join('', [`https://console.aws.amazon.com/cloudtrail/home?region=`, region , `#/trails/` , resource.TrailArn]),
+                  "short": `false`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

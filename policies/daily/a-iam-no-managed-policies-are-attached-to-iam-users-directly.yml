@@ -1,0 +1,46 @@
+policies:
+  - name: no-managed-policies-attached-iam-users-directly
+    resource: iam-user
+    description: "Account {account_id} - Ensure no Managed Policies are attached to IAM Users directly"
+    filters:
+      - type: policy
+        key: PolicyName
+        value: '.*'
+        op: regex
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `User Name`,
+                    "value": resource.UserName,
+                    "short": `true`
+                  },
+                  {
+                      "title": `Link`,
+                      "value": join('',[`https://console.aws.amazon.com/iam/home#/users/`,resource.UserName]),
+                      "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

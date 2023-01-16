@@ -1,0 +1,55 @@
+policies:
+  - name: ami-owned-by-an-aws-account-are-encrypted
+    description: "Account {account_id} - Ensure AMIs owned by an AWS account are encrypted"
+    resource: ami
+    filters:
+      - type: value
+        key: BlockDeviceMappings[].Ebs.Encrypted|[0]
+        value: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Image Id`,
+                    "value": resource.ImageId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Image Name`,
+                    "value": resource.Name,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

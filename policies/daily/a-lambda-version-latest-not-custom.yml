@@ -1,0 +1,46 @@
+policies:
+- name: aws-lambda-version-latest-not-custom
+  description: "Account {account_id} - Ensure AWS Lambda version is $LATEST and not custom version"
+  resource: aws.lambda
+  filters:
+    - type: value
+      key: Version
+      op: ne
+      value: '$LATEST'
+  actions:
+    - type: webhook
+      url: REPLACE_WEBHOOK_HERE
+      body: |-
+        {
+          "attachments": [
+            {
+              "fallback": `CloudCustodian Policy Violation`,
+              "title": policy.description,
+              "color": `warning`,
+              "fields": [
+                {
+                  "title": `Priority`,
+                  "value": `Low`,
+                  "short": `true`
+                },
+                {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                },
+                {
+                  "title": `Function Version`,
+                  "value": resource.Version,
+                  "short": `true`
+                },
+                {
+                    "title": `Link`,
+                    "value": join('', [`https://console.aws.amazon.com/lambda/home?region=`, region, `#/functions/`, resource.FunctionName]),
+                    "short": `false`
+                }
+              ],
+              "footer": `Powered By CldCvr DevSecOps`,
+              "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+            }
+          ]
+        }

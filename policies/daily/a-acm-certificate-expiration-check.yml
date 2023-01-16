@@ -1,0 +1,54 @@
+policies:
+  - name: acm-certificate-expiration-check
+    resource: acm-certificate 
+    description: Account {account_id} - ACM certificates about to expire in 14 days
+    filters:
+      - type: value
+        key: NotAfter
+        op: less-than
+        value_type: expiration 
+        value: 14
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `ACM Certificate ID`,
+                    "value": resource.CertificateArn,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0],
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/acm/home?region=`, region, `#/certificates/`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
+
+# SOC2
