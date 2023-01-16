@@ -13,7 +13,7 @@ jobs:
     name: check-filename-format
     runs-on: ubuntu-latest
     permissions:
-      id-token: read
+      id-token: write
       contents: read
     steps:
       - name: 'Cleanup build folder'
@@ -38,7 +38,7 @@ jobs:
     name: check-policy-length
     runs-on: ubuntu-latest
     permissions:
-      id-token: read
+      id-token: write
       contents: read
     steps:
       - name: Checkout
@@ -68,7 +68,7 @@ jobs:
     name: validation-check
     runs-on: ubuntu-latest
     permissions:
-      id-token: read
+      id-token: write
       contents: read
     steps:
       - name: Checkout
