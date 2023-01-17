@@ -1,0 +1,46 @@
+policies:
+  - name: dynamodb-encrypted-aws-kms
+    resource: aws.dynamodb-table
+    description: "Account {account_id} - DynamoDB table should be encrypted with AWS KMS"
+    filters:
+      - and:
+          - type: value
+            key: SSEDescription.KMSMasterKeyArn
+            value: absent
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `DynamoDB Name`,
+                    "value": resource.TableName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/dynamodbv2/home?region=`, region, `#table?initialTagKey=&name=`, resource.TableName,`&tab=overview`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

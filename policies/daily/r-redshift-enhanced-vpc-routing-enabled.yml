@@ -1,0 +1,53 @@
+policies:
+  - name: r-redshift-enhanced-vpc-routing-enabled
+    description: "Account {account_id} - Amazon Redshift Clusters VPC Routing Enabled" 
+    resource: redshift
+    filters:
+      - type: value
+        key: EnhancedVpcRouting
+        value: false
+        op: eq
+    actions:
+      - type: enable-vpc-routing
+        value: true
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Medium`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Redshift Name`,
+                    "value": resource.ClusterIdentifier,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/redshiftv2/home?region=`,region,`#cluster-details?cluster=`,resource.ClusterIdentifier,`&tab=performance`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

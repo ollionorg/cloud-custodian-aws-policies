@@ -1,0 +1,46 @@
+policies:
+  - name: aws-log-group-encryption-at-rest
+    description: "Account {account_id} - Log group encryption at rest should be enabled"
+    resource: aws.log-group
+    filters:
+      - type: value
+        key: kmsKeyId
+        value: absent
+
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `warning`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Low`,
+                    "short": `true`
+                  },
+                  {
+                      "title": `Account ID`,
+                      "value": account_id,
+                      "short": `true`
+                  },
+                  {
+                      "title": `Log group Name`,
+                      "value": resource.logGroupName,
+                      "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/iam/home?region=`, region, `#logsV2:log-groups/log-group`, resource.logGroupName ]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

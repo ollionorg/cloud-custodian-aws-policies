@@ -1,0 +1,45 @@
+policies:
+  - name: rds-backup-enabled
+    resource: aws.rds
+    description: "Account {account_id} - RDS DB Instance Backup Should Be Enabled"
+    filters:
+      - type: value
+        key: BackupRetentionPeriod
+        value: 0
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `RDS Name`,
+                    "value": resource.DBInstanceIdentifier,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/rds/home?region=`, region, `#database:id=`, resource.DBInstanceIdentifier,`;is-cluster=false;tab=maintenance-and-backups`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

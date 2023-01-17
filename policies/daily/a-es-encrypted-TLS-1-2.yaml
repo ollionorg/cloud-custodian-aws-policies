@@ -1,0 +1,52 @@
+---
+policies:
+  - name: es-encrypted-tls-1-2
+    description: "Account {account_id} - Connections to Elasticsearch domains should be encrypted using TLS 1.2"
+    resource: aws.elasticsearch
+    filters:
+      - type: value
+        key: DomainEndpointOptions.TLSSecurityPolicy
+        value: "Policy-Min-TLS-1-2-2019-07"
+        op: not-equal
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Elasticsearch Name`,
+                    "value": resource.DomainName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/esv3/home?region=`,region,`#opensearch/domains/`,resource.DomainName]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

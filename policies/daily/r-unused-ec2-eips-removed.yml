@@ -1,0 +1,53 @@
+policies:
+  - name: r-unused-ec2-eips-removed
+    description: "Account {account_id} unused ec2 eip's should be removed"
+    resource: aws.elastic-ip
+    filters:
+      - or:
+        - type: value
+          key: InstanceId
+          value: absent
+        - type: value
+          key: AssociationId
+          value: absent 
+    actions:
+      - type: release
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Public IP`
+                    "value": resource.PublicIp,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }       
+    
+  
+      

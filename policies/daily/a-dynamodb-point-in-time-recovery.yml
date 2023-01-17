@@ -1,0 +1,47 @@
+policies:
+  - name: dynamodb-point-in-time-recovery
+    resource: aws.dynamodb-table
+    description: "Account {account_id} - DynamoDB Table Point-In-Time Recovery Should Be Enabled"
+    filters:
+      - and:
+          - type: continuous-backup
+            key: PointInTimeRecoveryDescription.PointInTimeRecoveryStatus
+            op: eq
+            value: DISABLED
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": ` medium`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `DynamoDB Name`,
+                    "value": resource.TableName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/dynamodbv2/home?region=`, region, `#table?initialTagKey=&name=`, resource.TableName,`&tab=overview`]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

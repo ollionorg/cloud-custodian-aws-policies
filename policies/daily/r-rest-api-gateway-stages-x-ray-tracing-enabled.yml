@@ -1,0 +1,50 @@
+policies:
+  - name: r-rest-api-gateway-stages-x-ray-tracing-enabled
+    description: "Account {account_id} - API Gateway REST API Stages should Have AWS X-Ray Tracing Enabled"
+    resource: rest-stage
+    filters:
+      - type: value
+        key: tracingEnabled
+        value: false
+    actions:
+      - type: update
+        patch: 
+          - op: replace
+            path: "/tracingEnabled"
+            value: 'true'
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `LOW`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Api-stages Name`,
+                    "value": resource.stageName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/apigateway/home?region=`, region, `#/apis/`, resource.restApiId,`/stages/`,resource.stageName]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

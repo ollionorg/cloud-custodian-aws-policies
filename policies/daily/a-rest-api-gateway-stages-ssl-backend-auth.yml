@@ -1,0 +1,45 @@
+policies:
+  - name: rest-api-gateway-stages-ssl-backend-auth
+    resource: rest-stage
+    description: "Account {account_id} - API Gateway REST API stages should be configured to use SSL certificates for backend authentication"
+    filters:
+       - type: value
+         key: clientCertificateId
+         value: absent
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Medium`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Api-stages Name`,
+                    "value": resource.stageName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/apigateway/home?region=`, region, `#/apis/`, resource.restApiId,`/stages/`,resource.stageName]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

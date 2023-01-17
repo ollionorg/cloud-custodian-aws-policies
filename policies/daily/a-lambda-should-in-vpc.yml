@@ -1,0 +1,44 @@
+policies:
+  - name: a-lambda-should-in-vpc
+    description: "Account {account_id} - Lambda functions should be in a VPC"
+    resource: lambda
+    filters:
+      - or: 
+        - type: value
+          key: VpcConfig
+          value: absent
+        - type: value
+          key: VpcConfig.VpcId
+          value: ""
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                      "title": `Account ID`,
+                      "value": account_id,
+                      "short": `true`
+                  },
+                  {
+                      "title": `Link`,
+                      "value": join('', [`https://console.aws.amazon.com/lambda/home?region=`, region, `#/functions/`, resource.FunctionName]),
+                      "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
