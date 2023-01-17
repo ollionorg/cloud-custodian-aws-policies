@@ -26,7 +26,7 @@ policies:
                 ToPort: 65535
                 IpRanges:
                   - Description: "CldCVR VPN SSH ACCESS"
-                    CidrIp: "13.234.0.44/32"
+                    CidrIp: "1.2.3.4/32"
       - type: webhook
         url: REPLACE_WEBHOOK_HERE
         body: |-
