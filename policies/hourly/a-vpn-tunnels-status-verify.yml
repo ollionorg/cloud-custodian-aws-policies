@@ -1,0 +1,61 @@
+policies:
+  - name: a-vpn-tunnels-status-verify
+    description: "Account {account_id} Both VPN tunnels provided by AWS Site-to-Site VPN should be in UP status"
+    resource: aws.vpn-connection
+    filters:
+    - or:
+      - type: value
+        key: VgwTelemetry[1].Status
+        value: "DOWN"
+      - type: value
+        key: VgwTelemetry[0].Status
+        value: "DOWN"  
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Low`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `CustomerGatewayId`,
+                    "value": resource.CustomerGatewayId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `VpnConnectionId`,
+                    "value": resource.VpnConnectionId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('', [`https://console.aws.amazon.com/vpc/home?region=`,region,`#VpnConnectionDetails:VpnConnectionId=`,resource.VpnConnectionId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }    
+    
+     
