@@ -1,0 +1,45 @@
+policies:
+  - name: ec2-instance-detailed-monitoring-enabled
+    resource: ec2
+    description: "Account {account_id} - EC2 instance detailed monitoring should be enabled"
+    filters:
+      - type: value
+        key: Monitoring.State
+        value: disabled
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Low`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `InstanceId`,
+                    "value": resource.InstanceId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/ec2/home?region=`, region,`#InstanceDetails:instanceId=`, resource.InstanceId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

@@ -1,0 +1,47 @@
+policies:
+  - name: r-delete-igw-unattached-vpc
+    description: Account {account_id} - Delete internet gateways unattached vpc
+    resource: internet-gateway
+    filters:
+      - type: value
+        key: Attachments
+        value: []
+    actions:
+      - delete
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `Low`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `InternetGatewayId`,
+                    "value": resource.InternetGatewayId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AccountID`,
+                    "value": resource.OwnerId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          } 
+        

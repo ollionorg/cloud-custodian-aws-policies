@@ -1,0 +1,45 @@
+policies:
+  - name: elasticache-clusters-in-transit-encrypted
+    resource: elasticache-group
+    description: "Account {account_id} - Ensure that AWS ElastiCache Redis clusters are In-Transit encrypted"
+    filters:
+        - type: value
+          key: TransitEncryptionEnabled
+          value: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `ElastiCache Name`,
+                    "value": resource.ReplicationGroupId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/elasticache/home?region=`, region, `#/redis/`, resource.ReplicationGroupId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

@@ -1,0 +1,73 @@
+policies:
+  - name: copy-tags-volume-to-ebs-snapshots
+    resource:  ebs-snapshot
+    filters:
+        - Encrypted: false 
+    actions:
+      - type: copy-related-tag
+        resource: ebs
+        skip_missing: True
+        key: VolumeId
+        tags: '*'
+  - name: r-ebs-snapshots-create-encrypted
+    description: "Account {account_id} - Create encrypted ebs snapshot remove unencrypted ebs"
+    resource:  ebs-snapshot
+    filters:
+        - Encrypted: false 
+    actions:
+      - type: copy
+        target_region: '{region}'
+        target_key: alias/aws/ebs
+        encrypted: true
+      - delete
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `OLD SnapshotId`,
+                    "value": resource.SnapshotId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Volume Id`,
+                    "value": resource.VolumeId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Volume Name`,
+                    "value": resource.Tags[?Key==`Name`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `false`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

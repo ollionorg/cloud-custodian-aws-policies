@@ -1,0 +1,45 @@
+policies:
+  - name: cloudFront-distributions-default-root-object
+    resource: aws.distribution
+    description: "Account {account_id} - CloudFront Distributions Should Have A Default Root Object Configured"
+    filters:
+      - type: distribution-config
+        key: DefaultRootObject
+        value: ""
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `CloudFront Distributions Id`,
+                    "value": resource.Id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/cloudfront/v3/home?region=`, region, `#/distributions/`, resource.Id]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

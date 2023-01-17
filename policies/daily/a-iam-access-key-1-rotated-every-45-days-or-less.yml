@@ -1,0 +1,55 @@
+policies:
+  - name: iam-access-key1-rotated-45-days-or-less
+    resource: iam-user
+    description: Account {account_id} - Ensure access key1 is rotated every 45 days or less
+    filters:
+      - type: credential
+        key: access_keys.active
+        value: true
+      - type: value
+        key: '"c7n:matched-keys"[0]."last_rotated"'
+        value_type: age
+        value: 45
+        op: greater-than
+    actions:
+        - type: webhook
+          url: REPLACE_WEBHOOK_HERE
+          body: |-
+            {
+              "attachments": [
+                {
+                  "fallback": `CloudCustodian Policy Violation`,
+                  "title": policy.description,
+                  "color": `danger`,
+                  "fields": [
+                    {
+                      "title": `Priority`,
+                      "value": `High`,
+                      "short": `true`
+                    },
+                    {
+                      "title": `User Name`,
+                      "value": resource.UserName,
+                      "short": `true`
+                    },
+                    {
+                      "title": `AutoTag_Creator`,
+                      "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                      "short": `true`
+                    },
+                    {
+                      "title": `Region`,
+                      "value": region,
+                      "short": `true`
+                    },
+                    {
+                        "title": `Link`,
+                        "value": join('',[`https://console.aws.amazon.com/iam/home#/users/`,resource.UserName]),
+                        "short": `false`
+                    }
+                  ],
+                  "footer": `Powered By CldCvr DevSecOps`,
+                  "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+                }
+              ]
+            }

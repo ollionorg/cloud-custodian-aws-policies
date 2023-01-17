@@ -1,0 +1,55 @@
+policies:
+  - name: a-sagemaker-direct-internet-access
+    description: Account {account_id} - Amazon SageMaker Notebook Instances Should Not Have Direct Internet Access
+    resource: aws.sagemaker-notebook
+    filters:
+      - type: value
+        key: DirectInternetAccess
+        value: Enabled
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `SageMaker Name`,
+                    "value": resource.NotebookInstanceName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `DirectInternetAccess`,
+                    "value": resource.DirectInternetAccess,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/sagemaker/home?region=`,region,`#/notebook-instances/`,resource.NotebookInstanceName]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

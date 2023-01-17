@@ -1,0 +1,51 @@
+---
+policies:
+  - name: es-encryption-at-rest
+    description: "Account {account_id} - Amazon Elasticsearch Service Domains Should Have Encryption At Rest Enabled"
+    resource: aws.elasticsearch
+    filters:
+      - type: value
+        key: EncryptionAtRestOptions.Enabled
+        value: false
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `LOW`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Elasticsearch Name`,
+                    "value": resource.DomainName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/esv3/home?region=`,region,`#opensearch/domains/`,resource.DomainName]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

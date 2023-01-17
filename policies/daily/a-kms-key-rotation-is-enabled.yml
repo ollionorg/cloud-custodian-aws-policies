@@ -1,0 +1,55 @@
+policies:
+- name: aws-kms-key-rotation-is-enabled
+  resource: aws.kms-key
+  description: "Account {account_id} - Ensure rotation for customer created CMKs is enabled"
+  filters:
+    - type: key-rotation-status
+      key: KeyRotationEnabled
+      value: false
+  actions:
+    - type: webhook
+      url: REPLACE_WEBHOOK_HERE
+      body: |-
+        {
+           "attachments": [
+             {
+               "fallback": `CloudCustodian Policy Violation`,
+               "title": policy.description,
+               "color": `warning`,
+               "fields": [
+                 {
+                   "title": `Priority`,
+                   "value": `Low`,
+                   "short": `true`
+                 },
+                 {
+                   "title": `Key ARN`,
+                   "value": resource.KeyArn,
+                   "short": `true`
+                 },
+                 {
+                   "title": `Key Description`
+                   "value": resource.Description,
+                   "short": `true`
+                 },
+                 {
+                   "title": `Account ID`,
+                   "value": account_id,
+                   "short": `true`
+                 },
+                 {
+                   "title": `Region`,
+                   "value": region,
+                   "short": `true`
+                 },
+                 {
+                   "title": `Resource Link`,
+                   "value": join('', [`https://console.aws.amazon.com/iam/home?region=`, region, `#/kms/keys/`, resource.KeyId ]),
+                   "short": `false`
+                 }
+               ],
+               "footer": `Powered By CldCvr DevSecOps`,
+               "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+             }
+           ]
+        }

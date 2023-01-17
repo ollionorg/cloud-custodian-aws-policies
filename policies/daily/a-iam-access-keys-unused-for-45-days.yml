@@ -1,0 +1,52 @@
+policies:
+  - name: iam-45-days-unused-keys
+    description: Account {account_id} - Ensure access keys are unused for 45 days are disabled/deleted
+    resource: iam-user
+    filters:
+      - and:
+        - type: credential
+          key: access_keys.active
+          value: true
+        - type: credential
+          key: access_keys.last_used_date
+          value_type: age
+          value: 45
+          op: gte
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `User Name`,
+                    "value": resource.UserName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `AutoTag_Creator`,
+                    "value": resource.Tags[?Key==`AutoTag_Creator`].Value | [0] || `Tag Unavailable`,
+                    "short": `true`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
+# SOC2

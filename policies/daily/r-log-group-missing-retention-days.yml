@@ -1,0 +1,58 @@
+policies:
+  - name: aws-log-group-missing-retention-days-remediate
+    description: "Account {account_id} - Ensure log groups have retention period set"
+    resource: aws.log-group
+    filters:
+      - type: value
+        key: retentionInDays
+        value: absent
+
+    actions:
+      - type: retention
+        days: 365
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+             "attachments": [
+               {
+                 "fallback": `CloudCustodian Policy Violation`,
+                 "title": policy.description,
+                 "color": `warning`,
+                 "fields": [
+                   {
+                     "title": `Priority`,
+                     "value": `Low`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Log Group Name`,
+                     "value": resource.logGroupName,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Transit Encrytion Enabled`,
+                     "value": `False`,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Account ID`,
+                     "value": account_id,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Region`,
+                     "value": region,
+                     "short": `true`
+                   },
+                   {
+                     "title": `Resource Link`,
+                     "value": join('', [`https://console.aws.amazon.com/iam/home?region=`, region, `#logsV2:log-groups/log-group`, resource.logGroupName ]),
+                     "short": `false`
+                   }
+                 ],
+                 "footer": `Powered By CldCvr DevSecOps`,
+                 "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+               }
+             ]
+          }

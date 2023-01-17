@@ -1,0 +1,45 @@
+policies:
+  - name: rest-api-gateway-stage-associated-aws-waf-web-acl
+    resource: rest-stage
+    description: "Account {account_id} - API Gateway Should Be Associated With An AWS WAF Web ACL"
+    filters:
+       - type: value
+         key: webAclArn
+         value: absent
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `LOW`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Api-stages Name`,
+                    "value": resource.stageName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/apigateway/home?region=`, region, `#/apis/`, resource.restApiId,`/stages/`,resource.stageName]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }

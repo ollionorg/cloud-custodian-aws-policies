@@ -1,0 +1,45 @@
+policies:
+  - name: sagemaker-endpoint-configuration-encryption
+    resource: aws.sagemaker-endpoint-config
+    description: "Account {account_id} - SageMaker Endpoint Configuration Encryption Should Be Enabled"
+    filters:
+        - type: value
+          key: KmsKeyId
+          value: absent
+    actions:
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `EndpointConfigName`,
+                    "value": resource.EndpointConfigName,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Resource Link`,
+                    "value": join('', [`https://console.aws.amazon.com/sagemaker/home?region=`, region, `#/endpointConfig/`, resource.EndpointConfigName]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
