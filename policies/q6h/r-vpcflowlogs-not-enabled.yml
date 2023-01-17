@@ -1,0 +1,67 @@
+policies:
+  - name: r-enable-vpc-flowlog-on-vpcs
+    description: "Account {account_id} - Ensure that each VPC has VPC FlowLogs enabled"
+    resource: vpc
+    filters:
+      - not:
+         - type: flow-logs
+           enabled: true
+           set-op: or
+           op: equal
+           traffic-type: all
+           destination-type: s3
+           destination: "arn:aws:s3:::cc-prod-sentinel-vpcflowlogs-bucket-559677651209"
+           status: active
+    actions:
+      - type: set-flow-log
+        state: true
+        LogDestinationType: s3
+        TrafficType: "ALL"
+        LogDestination: "arn:aws:s3:::cc-prod-sentinel-vpcflowlogs-bucket-559677651209"
+        MaxAggregationInterval: 60
+      - type: webhook
+        url: REPLACE_WEBHOOK_HERE
+        body: |-
+          {
+            "attachments": [
+              {
+                "fallback": `CloudCustodian Policy Violation`,
+                "title": policy.description,
+                "color": `danger`,
+                "fields": [
+                  {
+                    "title": `Priority`,
+                    "value": `High`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `VPC Id`,
+                    "value": resource.VpcId,
+                    "short": `true`
+                  },
+                  {
+                    "title": `VPC FlowLogs`,
+                    "value": `Not Enabled`,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Account ID`,
+                    "value": account_id,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Region`,
+                    "value": region,
+                    "short": `true`
+                  },
+                  {
+                    "title": `Link`,
+                    "value": join('', [`https://us-east-1.console.aws.amazon.com/vpc/home`, `?region=`, region, `#VpcDetails:VpcId=`, resource.VpcId]),
+                    "short": `false`
+                  }
+                ],
+                "footer": `Powered By CldCvr DevSecOps`,
+                "footer_icon": `https://a.cldcvr.com/cldcvr/favicons/64px.png`
+              }
+            ]
+          }
