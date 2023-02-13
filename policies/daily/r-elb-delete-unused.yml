@@ -1,5 +1,6 @@
 policies:
   - name: r-elb-delete-unused
+    description: "Account {account_id} -Delete unused ELB"
     resource: elb
     filters:
       - Instances: []
