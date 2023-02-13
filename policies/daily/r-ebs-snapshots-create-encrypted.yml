@@ -1,5 +1,6 @@
 policies:
   - name: copy-tags-volume-to-ebs-snapshots
+    description: copy tags volume to ebs snapshots
     resource:  ebs-snapshot
     filters:
         - Encrypted: false 
