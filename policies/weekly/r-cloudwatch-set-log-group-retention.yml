@@ -1,5 +1,6 @@
 policies:
   - name: r-cloudwatch-set-log-group-retention
+    description: "Account {account_id} -  Set log group retention on cloudwatch"
     resource: log-group
     filters:
        - or:   
