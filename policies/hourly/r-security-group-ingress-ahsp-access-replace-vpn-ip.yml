@@ -1,7 +1,7 @@
 policies:
   - name: r-security-group-ingress-ahsp-access-replace-vpn-ip
     resource: security-group
-    description: "Account {account_id} - VPC security groups should restrict ingress ahsp access from 0.0.0.0/0 replace with CC VPN IP"
+    description: "Account {account_id} - VPC security groups should restrict ingress ahsp access from 0.0.0.0/0 replace with VPN IP"
     filters:
       - or:
         - type: ingress
@@ -21,7 +21,7 @@ policies:
                 FromPort: 4333
                 ToPort: 4333
                 IpRanges:
-                  - Description: "CldCVR VPN SSH ACCESS"
+                  - Description: "VPN IP"
                     CidrIp: "1.2.3.4/32"
       - type: webhook
         url: REPLACE_WEBHOOK_HERE
