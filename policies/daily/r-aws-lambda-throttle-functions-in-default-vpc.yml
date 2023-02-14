@@ -21,7 +21,7 @@ policies:
          format: json
          expr: "[].VpcConfig.VpcId"
   - name: throttle-lambdas-in-default-vpc
-    description: throttle-lambdas-in-default-vpc
+    description: Account {account_id} - throttle Lmbdas in default VPC
     resource: lambda
     filters:
       - type: value
