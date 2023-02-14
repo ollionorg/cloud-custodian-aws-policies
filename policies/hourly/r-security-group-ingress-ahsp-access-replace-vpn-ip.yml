@@ -1,19 +1,15 @@
 policies:
-  - name: r-security-group-ingress-all-udp-access-replace-vpn-ip
+  - name: r-security-group-ingress-ahsp-access-replace-vpn-ip
     resource: security-group
-    description: "Account {account_id} - VPC security groups should restrict ingress UDP access from 0.0.0.0/0 replace with VPN IP"
+    description: "Account {account_id} - VPC security groups should restrict ingress ahsp access from 0.0.0.0/0 replace with VPN IP"
     filters:
       - or:
         - type: ingress
-          IpProtocol: udp
-          FromPort: 0
-          ToPort: 65535
+          Ports: [4333]
           Cidr:
             value: "0.0.0.0/0"
         - type: ingress
-          IpProtocol: udp
-          FromPort: 0
-          ToPort: 65535
+          Ports: [4333]
           CidrV6:
             value: "::/0"
     actions:
@@ -21,9 +17,9 @@ policies:
         remove-ingress: matched
         add-ingress:
           - IpPermissions:
-              - IpProtocol: UDP
-                FromPort: 0
-                ToPort: 65535
+              - IpProtocol: TCP
+                FromPort: 4333
+                ToPort: 4333
                 IpRanges:
                   - Description: "VPN IP"
                     CidrIp: "1.2.3.4/32"
