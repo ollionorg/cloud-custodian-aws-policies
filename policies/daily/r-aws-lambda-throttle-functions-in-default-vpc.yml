@@ -1,11 +1,13 @@
 policies:
   - name: list-vpc-in-lambda
+    description: "Account {account_id} - list vpc in lambda"
     resource: lambda
     filters:
       - type: value
         key: VpcConfig.VpcId
         value: present
   - name: check-default-vpc-in-lambda
+    description: "Account {account_id} - check default vpc in lambda"
     resource: vpc
     filters:
       - type: value
